@@ -1,5 +1,6 @@
-import { ADDRESS_STATUS, RECEIVE_ADDRESS, SEND_ADDRESS } from '../constants';
-import { Address } from '../interfaces';
+import { ADDRESS_STATUS, RECEIVE_ADDRESS, SEND_ADDRESS, MAJOR_DOMAINS } from '../constants';
+import { Address, Recipient } from '../interfaces';
+import { ContactEmail } from '../interfaces/contacts';
 
 export const getActiveAddresses = (addresses: Address[]): Address[] => {
     return addresses.filter(({ Status, Receive, Send }) => {
@@ -13,4 +14,22 @@ export const getActiveAddresses = (addresses: Address[]): Address[] => {
 
 export const hasAddresses = (addresses: Address[] | undefined): boolean => {
     return Array.isArray(addresses) && addresses.length > 0;
+};
+
+export const contactToRecipient = (contact: Partial<ContactEmail> = {}, groupPath?: string): Partial<Recipient> => ({
+    Name: contact.Name,
+    Address: contact.Email,
+    ContactID: contact.ContactID,
+    Group: groupPath,
+});
+
+export const majorDomainsMatcher = (inputValue: string) => {
+    const [localPart, domainPart] = inputValue.split('@');
+    if (!localPart || typeof domainPart !== 'string') {
+        return [];
+    }
+    return MAJOR_DOMAINS.map((domain) => {
+        const email = `${localPart}@${domain}`;
+        return { Address: email, Name: email } as Recipient;
+    });
 };
