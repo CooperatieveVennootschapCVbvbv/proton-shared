@@ -1,4 +1,4 @@
-import { ADDRESS_STATUS, RECEIVE_ADDRESS, SEND_ADDRESS, MAJOR_DOMAINS } from '../constants';
+import { ADDRESS_STATUS, RECEIVE_ADDRESS, SEND_ADDRESS } from '../constants';
 import { Address, Recipient } from '../interfaces';
 import { ContactEmail } from '../interfaces/contacts';
 
@@ -22,14 +22,3 @@ export const contactToRecipient = (contact: Partial<ContactEmail> = {}, groupPat
     ContactID: contact.ContactID,
     Group: groupPath,
 });
-
-export const majorDomainsMatcher = (inputValue: string) => {
-    const [localPart, domainPart] = inputValue.split('@');
-    if (!localPart || typeof domainPart !== 'string') {
-        return [];
-    }
-    return MAJOR_DOMAINS.map((domain) => {
-        const email = `${localPart}@${domain}`;
-        return { Address: email, Name: email } as Recipient;
-    });
-};
