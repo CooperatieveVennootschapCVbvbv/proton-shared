@@ -1,13 +1,14 @@
-import getRandomValues from 'get-random-values';
-import { serializeUint8Array } from '../helpers/serialization';
+import { arrayToBinaryString, binaryStringToArray, decodeUtf8, unsafeSHA1 } from 'pmcrypto';
+import { openpgp } from 'pmcrypto/lib/openpgp';
 import { Attendee } from '../interfaces/calendar';
 import { VcalAttendeeProperty, VcalVeventComponent } from '../interfaces/calendar/VcalModel';
-import { ATTENDEE_PERMISSIONS, ATTENDEE_STATUS_API, ICAL_ATTENDEE_STATUS } from './constants';
+import { ATTENDEE_STATUS_API, ICAL_ATTENDEE_STATUS } from './constants';
 
-const generateAttendeeToken = () => {
-    // we need a random base64 string with 40 characters
-    const value = getRandomValues(new Uint8Array(30));
-    return serializeUint8Array(value);
+export const generateAttendeeToken = async (email: string, uid: string) => {
+    const uidEmail = uid + email;
+    const byteArray = binaryStringToArray(decodeUtf8(uidEmail));
+    const hash = await unsafeSHA1(byteArray);
+    return openpgp.util.str_to_hex(arrayToBinaryString(hash));
 };
 
 const convertPartstat = (partstat?: string) => {
@@ -27,26 +28,24 @@ const convertPartstat = (partstat?: string) => {
  * Internally permissions are stored as x-pm-permissions in the vevent,
  * but stripped for the api.
  */
-export const fromInternalAttendee = ({
-    parameters: {
-        'x-pm-permissions': oldPermissions = ATTENDEE_PERMISSIONS.SEE,
-        'x-pm-token': oldToken = '',
-        partstat,
-        ...restParameters
-    } = {},
-    ...rest
-}: VcalAttendeeProperty) => {
-    const token = oldToken || generateAttendeeToken();
+export const fromInternalAttendee = async (
+    { parameters: { 'x-pm-token': oldToken = '', partstat, ...restParameters } = {}, ...rest }: VcalAttendeeProperty,
+    component: VcalVeventComponent
+) => {
+    if (restParameters.cn === undefined) {
+        throw new Error('Attendee information error');
+    }
+    const token = oldToken || (await generateAttendeeToken(restParameters.cn, component.uid.value));
     return {
         attendee: {
             parameters: {
                 ...restParameters,
                 'x-pm-token': token,
+                rsvp: 'TRUE' as const,
             },
             ...rest,
         },
         clear: {
-            permissions: oldPermissions,
             token,
             status: convertPartstat(partstat),
         },

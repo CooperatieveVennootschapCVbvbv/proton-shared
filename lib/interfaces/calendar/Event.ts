@@ -30,6 +30,7 @@ export interface CalendarEventBlobData {
 
 export interface CalendarEventSharedData {
     ID: string;
+    UID?: string;
     SharedEventID: string;
     CalendarID: string;
     CreateTime: number;

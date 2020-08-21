@@ -1,4 +1,4 @@
-import { ATTENDEE_PERMISSIONS, ICAL_EVENT_STATUS } from '../../calendar/constants';
+import { ATTENDEE_PERMISSIONS, ICAL_EVENT_STATUS, ICAL_ATTENDEE_ROLE } from '../../calendar/constants';
 
 export enum VcalDays {
     SU,
@@ -153,11 +153,12 @@ export interface VcalStatusProperty {
 }
 
 export interface VcalAttendeePropertyParameters extends VcalOrganizerPropertyParameters {
+    cn?: string;
     cutype?: string;
     member?: string;
-    role?: string;
+    role?: ICAL_ATTENDEE_ROLE;
     partstat?: string;
-    rsvp?: string;
+    rsvp?: 'TRUE' | 'FALSE';
     'delegated-from'?: string;
     'delegated-to'?: string;
     'x-pm-permissions'?: ATTENDEE_PERMISSIONS;
